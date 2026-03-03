@@ -1,0 +1,54 @@
+import pandas as pd
+from sqlalchemy import create_engine
+import numpy as np
+
+# 1. Carregar dataset original RNAL
+df_raw = pd.read_csv('Estabelecimentos_de_Alojamento_Local.csv', encoding='ISO-8859-1')
+
+# 2. Criar Dim_Tempo (de Data do registo)
+df_raw['data_registo'] = pd.to_datetime(df_raw['DataRegisto'])
+datas_unicas = df_raw['data_registo'].drop_duplicates().sort_values().reset_index(drop=True)
+dim_tempo = pd.DataFrame({
+    'id_tempo': range(1, len(datas_unicas) + 1),
+    'ano': datas_unicas.dt.year,
+    'mes': datas_unicas.dt.month,
+    'trimestre': datas_unicas.dt.quarter,
+    'data_registo': datas_unicas.dt.date
+})
+
+# 3. Criar Dim_Regiao (valores únicos)
+dim_regiao = df_raw[['Concelho', 'Distrito', 'NUTSII']].drop_duplicates()
+dim_regiao['id_regiao'] = range(1, len(dim_regiao) + 1)
+dim_regiao = dim_regiao[['id_regiao', 'Concelho', 'Distrito', 'NUTSII']]
+
+# 4. Criar Dim_Modalidade
+dim_modalidade = df_raw['Modalidade'].drop_duplicates().dropna()
+dim_modalidade = pd.DataFrame({
+    'id_modalidade': range(1, len(dim_modalidade) + 1),
+    'modalidade': dim_modalidade.values
+})
+
+# 5. Criar Fact_OfertaAL (agregação)
+# Mapear para IDs
+df_raw['data_registo_date'] = df_raw['data_registo'].dt.date
+df_raw = df_raw.merge(dim_tempo[['id_tempo', 'data_registo']], left_on='data_registo_date', right_on='data_registo', how='left', suffixes=('', '_dim'))
+df_raw = df_raw.merge(dim_regiao, on=['Concelho', 'Distrito', 'NUTSII'], how='left')
+df_raw = df_raw.merge(dim_modalidade, left_on='Modalidade', right_on='modalidade', how='left')
+
+fact_oferta = df_raw.groupby(['id_tempo', 'id_regiao', 'id_modalidade']).agg({
+    'NrRNAL': 'count',           # num_alojamentos
+    'NrUtentes': 'sum',          # total_utentes
+}).reset_index()
+fact_oferta.columns = ['id_tempo', 'id_regiao', 'id_modalidade', 'num_alojamentos', 'total_utentes']
+
+# 6. Exportar CSVs finais
+dim_tempo.to_csv('Dim_Tempo.csv', index=False)
+dim_regiao.to_csv('Dim_Regiao.csv', index=False)
+dim_modalidade.to_csv('Dim_Modalidade.csv', index=False)
+fact_oferta.to_csv('Fact_OfertaAL.csv', index=False)
+
+print("✅ Dataset criado!")
+print(f"Dim_Tempo: {len(dim_tempo)} linhas")
+print(f"Dim_Regiao: {len(dim_regiao)} linhas") 
+print(f"Dim_Modalidade: {len(dim_modalidade)} linhas")
+print(f"Fact_OfertaAL: {len(fact_oferta)} linhas")
