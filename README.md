@@ -1,198 +1,240 @@
-# Data Warehouse — Alojamento Local em Portugal
+# Tourism Supply and Demand Analysis in Portugal
 
-![Python](https://img.shields.io/badge/Python-3.14-blue)
-![Pandas](https://img.shields.io/badge/Pandas-ETL-green)
+![Python](https://img.shields.io/badge/Python-Data%20Processing-blue)
+![Data Warehouse](https://img.shields.io/badge/Data%20Warehouse-Star%20Schema-green)
 ![Status](https://img.shields.io/badge/Status-Academic%20Project-lightgrey)
 
----
+## Project Overview
 
-## Descrição do Projeto
+This project analyzes the relationship between **tourism demand** and **accommodation supply** in Portugal, focusing on **Local Accommodation (Alojamento Local)** and **tourism overnight stays**.
 
-Este projeto consiste na construção de um **Data Warehouse (DW)** para análise da oferta registada de **Alojamento Local (AL)** em Portugal Continental, utilizando dados do RNAL (Registo Nacional de Alojamento Local).
+The objective is to build a **Data Analytics solution** that combines a **Data Warehouse (DW)** and **Data Mining (DM)** techniques to analyze tourism patterns and support decision-making related to tourism planning and accommodation growth.
 
-O objetivo é suportar:
-
-- Planeamento turístico
-- Ordenamento do território
-- Fiscalização e políticas públicas
-- Monitorização de crescimento regional
-
-**Dataset base:** Estabelecimentos de Alojamento Local com informação sobre localização hierárquica, capacidade, datas e modalidade.
+The analysis focuses on the period **2011–2024**, integrating multiple public datasets to explore tourism dynamics across Portuguese regions.
 
 ---
 
-## Big Questions
+# Motivation
 
-O DW foi desenhado para responder às seguintes questões:
+Tourism is one of the most important sectors of the Portuguese economy. However, the rapid growth of **Local Accommodation (AL)** can create pressure on cities and local populations.
 
-1. Crescimento anual de AL por região
-2. Regiões com maior capacidade de alojamento
-3. Modalidades dominantes por região
-4. Distribuição do selo Clean & Safe
-5. Identificação de pressão territorial (densidade AL)
+This project aims to answer questions such as:
 
----
+- How has tourism demand evolved over time?
+- Which regions have the highest accommodation capacity?
+- Are there areas experiencing excessive tourism pressure?
+- Where should accommodation supply be encouraged or regulated?
 
-## Arquitetura — Star Schema
-
-```
-                  Dim_Tempo
-                      |
-Dim_Regiao —— Fact_OfertaAL —— Dim_Modalidade
-```
-
-### Fact Table — `Fact_OfertaAL`
-
-Grão: `ANO × CONCELHO × MODALIDADE` (8,303 linhas após agregação)
-
-| Campo | Descrição |
-|---|---|
-| `id_tempo` | FK → Dim_Tempo |
-| `id_regiao` | FK → Dim_Regiao |
-| `id_modalidade` | FK → Dim_Modalidade |
-| `num_alojamentos` | Nº de AL registados |
-| `total_utentes` | Capacidade total de utentes |
-
-### Dimensões
-
-**Dim_Tempo** (71 anos): `id_tempo`, `ano` (1900-2026)
-
-**Dim_Regiao** (278 regiões): `id_regiao`, `Concelho`, `Distrito`, `NUTS_II`
-
-**Dim_Modalidade** (5 modalidades): `id_modalidade`, `modalidade`
-- Apartamento
-- Moradia
-- EstabelecimentoHospedagem
-- Quartos
-- EstabelecimentoHospedagemHostel
+By combining multiple datasets and analytical methods, this project provides **insights for tourism planning and decision support**.
 
 ---
 
-## Processo ETL
+# Data Sources
 
-1. **Extração** — Fonte: `Estabelecimentos_de_Alojamento_Local.csv` (112,661 linhas carregadas)
-2. **Limpeza** — Remoção de registos com dados essenciais em falta (encoding ISO-8859-1)
-3. **Transformação** — Pandas para normalização de datas e criação de dimensão temporal anual
-4. **Dimensões** — Criação de tabelas de dimensão com valores únicos:
-   - Tempo: Agregação por ano (grão anual)
-   - Região: Combinações únicas de Concelho/Distrito/NUTS II
-   - Modalidade: Tipos únicos de alojamento
-5. **Fact** — Agregação por `id_tempo × id_regiao × id_modalidade` com métricas:
-   - `num_alojamentos`: Contagem de estabelecimentos
-   - `total_utentes`: Soma da capacidade
-6. **Exportação** — Saída em formato CSV para análise
+The project integrates three main datasets.
+
+## 1. Local Accommodation Dataset (RNAL)
+
+Dataset containing information about registered **Local Accommodation establishments in Portugal**, representing the **tourism supply**.
+
+Main variables:
+
+- Registration date  
+- Opening date  
+- Accommodation type (apartment, house, etc.)  
+- Maximum capacity (number of guests)  
+- Municipality (Concelho)  
+- District  
+- NUTS II region  
+- NUTS III region  
 
 ---
 
-## Visualização
+## 2. Tourism Overnight Stays (INE)
 
-Os dados podem ser importados para ferramentas de visualização como Power BI ou Tableau para análise:
+Dataset with the number of **overnight stays in tourism accommodation establishments**, representing **tourism demand**.
 
-- Evolução temporal de AL por região
-- Comparação regional de capacidade
-Após execução do pipeline ETL:
+Main variables:
 
-- **Dim_Tempo:** 71 linhas (anos de 1900 a 2026)
-- **Dim_Regiao:** 278 linhas (combinações concelho/distrito/NUTS II)
-- **Dim_Modalidade:** 5 linhas (tipos de alojamento)
-- **Fact_OfertaAL:** 8,303 linhas (agregações ANO × CONCELHO × MODALIDADE)
+- Year  
+- Region (NUTS / municipality)  
+- Number of overnight stays  
+- Guest origin (Portugal / Foreign)
 
-### Estrutura dos Ficheiros CSV
+---
 
-**Dim_Tempo.csv**
-```csv
-id_tempo,ano
-1,1900
-2,1930
-3,1935
-...
+## 3. Resident Population (INE)
+
+Dataset containing **annual estimates of resident population by municipality**, used to contextualize tourism pressure relative to the local population.
+
+Main variables:
+
+- Year  
+- Municipality / Region  
+- Resident population
+
+---
+
+# Project Architecture
+
+The project follows a typical **data analytics pipeline**:
+
 ```
-
-**Dim_Regiao.csv**
-```csv
-Concelho,Distrito,NUTS_II,id_regiao
-Olhão,Faro,Algarve,1
-Tavira,Faro,Algarve,2
-...
-```
-
-**Dim_Modalidade.csv**
-```csv
-id_modalidade,modalidade
-1,Apartamento
-2,Moradia
-3,EstabelecimentoHospedagem
-4,Quartos
-5,EstabelecimentoHospedagemHostel
-```
-
-**Fact_OfertaAL.csv**
-```csv
-id_tempo,id_regiao,id_modalidade,num_alojamentos,total_utentes
-1,70,1,4,14
-1,70,5,1,17
-...
+Data Sources
+     │
+     ▼
+ETL Process
+(Extract, Transform, Load)
+     │
+     ▼
+Data Warehouse
+(Star Schema)
+     │
+     ▼
+OLAP Analysis
+     │
+     ▼
+Data Mining & Insights
 ```
 
 ---
 
-## Estrutura do Projeto
+# Data Warehouse (DW)
+
+The Data Warehouse is designed using a **Star Schema** to support analytical queries.
+
+## Fact Tables
+
+- **Fact_Accommodation**
+  - Number of accommodation registrations
+  - Total accommodation capacity
+
+- **Fact_Tourism**
+  - Number of overnight stays
+
+- **Fact_Population**
+  - Resident population
+
+## Dimension Tables
+
+- **Dim_Time**
+- **Dim_Region**
+- **Dim_Accommodation_Type**
+
+This structure enables efficient analysis across **time, location, and accommodation characteristics**.
+
+---
+
+# Data Analytics Requirements
+
+## Descriptive Analytics
+
+Examples of descriptive questions:
+
+- How has the number of **Local Accommodation registrations** evolved by municipality?
+- Which municipalities have the **highest accommodation capacity**?
+- How are **tourism overnight stays distributed across NUTS II regions**?
+- Which municipalities have the **highest accommodation capacity per resident**?
+
+---
+
+## Diagnostic Analytics
+
+Examples of diagnostic questions:
+
+- Is there a relationship between **growth in Local Accommodation and tourism demand**?
+- Which municipalities show **higher tourism pressure relative to population**?
+- Are there regions with **high tourism demand but limited accommodation capacity**?
+
+---
+
+# Data Mining (DM)
+
+## Predictive Analytics
+
+Predictive models will be used to estimate:
+
+- Future **growth of tourism overnight stays by region**
+- Probability of **new Local Accommodation registrations** in municipalities
+
+Possible techniques include:
+
+- Regression models  
+- Time series forecasting  
+- Machine learning models  
+
+---
+
+## Prescriptive Analytics
+
+Based on the results, the project aims to suggest:
+
+- Regions where **accommodation supply should increase**
+- Municipalities where **tourism growth may require regulation or planning measures**
+
+---
+
+# Expected Outcomes
+
+The project aims to produce:
+
+- A structured **Data Warehouse for tourism analytics**
+- Analytical queries and visualizations
+- **Predictive insights** about tourism demand
+- **Decision support recommendations** for tourism planning
+
+---
+
+# Technologies
+
+Possible technologies used in the project:
+
+- Python
+- Pandas / NumPy
+- SQL
+- PostgreSQL or SQLite
+- ETL scripts
+- OLAP queries
+- Data visualization tools
+
+---
+
+# Project Deliverables
+
+The project will be developed in three stages:
+
+1. **Theme Proposal**
+2. **Poster and Presentation**
+3. **Final Report and Project Discussion**
+
+The final deliverable includes:
+
+- Data Warehouse implementation
+- ETL pipeline
+- Analytical queries
+- Data mining models
+- Final report and presentation materials
+
+---
+
+# Repository Structure
 
 ```
-miacd-tad-data-warehouse/
-├── Estabelecimentos_de_Alojamento_Local.csv  # Dataset original (RNAL)
-├── star-schema                                # Script ETL Python
-├── requirements.txt                           # Dependências Python
-├── README.md                                  # Documentação
-├── Dim_Tempo.csv                              # Dimensão temporal (71 anos)
-├── Dim_Regiao.csv                             # Dimensão geográfica (278 regiões)
-├── Dim_Modalidade.csv                         # Dimensão de modalidade (5 tipos)
-└── Fact_OfertaAL.csv                          # Tabela de factos (8,303 registos)
+project/
+│
+├── data/                # Raw datasets
+├── etl/                 # ETL scripts
+├── dw/                  # Data warehouse schema
+├── analysis/            # Analytical queries and notebooks
+├── models/              # Data mining models
+├── visualizations/      # Charts and dashboards
+└── README.md
 ```
 
 ---
 
-## Instalação e Execução
+# Acknowledgements
 
-1. Criar e ativar ambiente virtual:
-```bash
-python -m venv .venv
-source .venv/bin/activate  # Linux/Mac
-# ou
-.venv\Scripts\activate     # Windows
-```
+This project was developed for the **Data Analytics Technologies (TAD)** course at the **University of Coimbra – Department of Informatics Engineering**.
 
-2. Instalar dependências:
-```bash
-pip install -r requirements.txt
-```
-
-3. Executar o script ETL:
-```bash
-python star-schema
-```
-
-4. Os ficheiros CSV serão gerados no diretório atual
-
----
-
-## Métricas Técnicas
-
-| Métrica | Valor |
-|---|---|
-| Dataset Original | 112,661 linhas |
-| Dim_Tempo | 71 anos (1900-2026) |
-| Dim_Regiao | 278 regiões |
-| Dim_Modalidade | 5 modalidades |
-| Fact_OfertaAL | 8,303 agregações |
-| Grão da Fact | ANO × CONCELHO × MODALIDADE |
-| Tempo de execução | < 5 segundos |
-
----
-
-## Tecnologias
-
-- Python 3.13
-- Pandas
-- NumPy
-- SQLAlchemy
+AI tools may have been used to assist with writing, documentation, and coding, in accordance with the course guidelines.
