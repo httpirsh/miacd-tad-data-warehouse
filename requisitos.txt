@@ -27,7 +27,9 @@ G2. Que regiões apresentam maior pressão turística (dormidas por habitante) e
 
 G3. Existem regiões com um crescimento turístico significativamente diferente da média nacional?
 
-G4. Que regiões apresentam maior dependência sazonal, nomeadamente concentração de dormidas nos meses de época alta?
+G4. Qual é o padrão sazonal das dormidas ao longo do ano em cada região?
+
+G5. Que regiões apresentam maior dependência sazonal da atividade turística?
 
 
 Preditiva — O que vai acontecer?
