@@ -12,7 +12,7 @@ A análise será feita de forma hierárquica, possibilitando operações de dril
 
 Descritiva — O que aconteceu?
 
-D1. Como evoluiu o número de dormidas ao longo do tempo (mensal e anual) nas diferentes regiões?
+D1. Como evoluiu o número de dormidas ao longo dos anos nas diferentes regiões?
 
 D2. Qual a capacidade de alojamento local por região, medida pela capacidade máxima de hóspedes (número de utentes registado nos alojamentos), e qual a sua proporção face à população residente?
 
