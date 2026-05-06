@@ -25,7 +25,7 @@ G1. Existe relação entre o crescimento da oferta de alojamento local e o aumen
 
 G2. Que regiões apresentam maior pressão turística (dormidas por habitante) e em quais essa procura não é acompanhada por uma oferta proporcional?
 
-G3. Existem regiões com um crescimento turístico significativamente diferente da média nacional?
+G3. Quais regiões apresentam maior dinamismo de crescimento turístico ao longo do tempo?
 
 G4. Qual é o padrão sazonal das dormidas ao longo do ano em cada região?
 
